@@ -1,74 +1,69 @@
+# MLOps OPPE-2 — Heart Disease Classification
 
-# IITM BS MLOps OPPE-2 — Heart Disease Prediction API
+## 1. Project Overview
 
-## Project Overview
+This project implements an end-to-end MLOps workflow for a **Heart Disease Classification** machine learning application.
 
-This project implements an end-to-end MLOps pipeline for a heart disease classification model.
+The project covers the complete lifecycle of a machine learning application:
 
-The project covers:
+**Data → Preprocessing → Model Training → Explainability → Fairness → API → Docker → Artifact Registry → GKE → HPA → CI/CD → Logging → Load Testing → Drift Detection**
 
-1. Private GitHub repository
-2. Model explainability using SHAP
-3. Fairness analysis using Fairlearn
-4. Dockerized FastAPI application deployed on Google Kubernetes Engine (GKE)
-5. Horizontal Pod Autoscaling (HPA)
-6. Automated CI/CD using GitHub Actions and Google Cloud Workload Identity Federation
-7. API prediction logging using Google Cloud Logging
-8. 100 prediction requests through the deployed API
-9. Load testing using `wrk` with more than 2,000 concurrent connections
-10. Input data drift detection using KS statistical testing and Evidently
+The machine learning model predicts whether a patient is likely to have heart disease based on clinical input features.
+
+The project was developed and deployed using **Google Cloud Platform (GCP)**, with the application containerized using Docker and deployed to **Google Kubernetes Engine (GKE)**.
 
 ---
 
-## 1. Project Structure
+# 2. Problem Statement
+
+The objective of this project is to develop a machine learning classification system that predicts whether a patient has heart disease.
+
+This is a **supervised binary classification problem**.
+
+The dataset contains patient-related features such as:
+
+- Age
+- Gender
+- Chest pain type
+- Resting blood pressure
+- Cholesterol
+- Fasting blood sugar
+- Resting ECG
+- Maximum heart rate
+- Exercise-induced angina
+- Oldpeak
+- Slope
+- Number of major vessels
+- Thalassemia-related information
+
+The target variable indicates whether heart disease is present or not.
+
+The goal was not only to train a machine learning model, but also to build a complete and deployable MLOps solution with:
+
+- Explainability
+- Fairness analysis
+- REST API
+- Containerization
+- Cloud deployment
+- Kubernetes orchestration
+- Autoscaling
+- CI/CD
+- Cloud logging
+- Load testing
+- Input drift detection
+
+---
+
+# 3. Dataset
+
+The project uses the `data.csv` dataset.
+
+Dataset shape:
 
 ```text
-.
-├── .github/
-│   └── workflows/
-│       └── deploy.yml
-│
-├── app/
-│   ├── main.py
-│   ├── train_model.py
-│   └── model/
-│       └── model.joblib
-│
-├── k8s/
-│   ├── deployment.yaml
-│   ├── service.yaml
-│   └── hpa.yaml
-│
-├── data.csv
-├── requirements.txt
-├── Dockerfile
-│
-├── explainability.py
-├── shap_feature_importance.csv
-├── shap_summary.png
-│
-├── fairness.py
-├── fairlearn_age_group_metrics.csv
-├── fairness_summary.csv
-│
-├── prediction_data_100.csv
-├── task5_api_predictions.csv
-│
-├── load_test.lua
-│
-├── drift_detection.py
-├── drift_summary.csv
-└── drift_report.html
+303 rows × 15 columns
 
-2. Dataset
-
-The project uses data.csv for heart disease classification.
-
-The dataset contains:
-
-303 observations
-15 columns
-Columns
+Columns:
 sno
 age
 gender
@@ -85,126 +80,235 @@ ca
 thal
 target
 
-The sno column is an observation identifier and is excluded from model training.
+The target distribution is:
+yes    165
+no     138
 
-The target column is the prediction target.
+The sno column is an identifier and was excluded from model training.
 
-Target distribution:
+The target column was converted into a binary representation:
 
-yes = 165
-no  = 138
-3. Model Training
+yes → 1
+no  → 0
 
-The model is implemented using a preprocessing pipeline and Random Forest classifier.
+4. Project Structure
+22f3002188_IITMBS_MLOPS_OPPE2_MAY_2026/
+│
+├── app/
+│   ├── model/
+│   │   └── model.joblib
+│   │
+│   ├── main.py
+│   └── train_model.py
+│
+├── k8s/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── hpa.yaml
+│
+├── .github/
+│   └── workflows/
+│       └── deploy.yml
+│
+├── data.csv
+├── explainability.py
+├── fairness.py
+├── drift_detection.py
+├── task5_predictions.py
+├── task5_api_predictions.csv
+├── prediction_data_100.csv
+├── load_test.lua
+├── shap_feature_importance.csv
+├── shap_summary.png
+├── drift_summary.csv
+├── drift_report.html
+├── Dockerfile
+├── requirements.txt
+├── .gitignore
+└── README.md
 
-Preprocessing
-Missing numerical values are imputed using the median.
-Missing categorical values are imputed using the most frequent value.
-gender is one-hot encoded.
-sno is removed.
-target is separated as the prediction variable.
-Train/Test Split
-test_size = 0.20
-random_state = 42
-stratify = target
-Model
-RandomForestClassifier
+5. Technology Stack
+
+The project uses the following technologies:
+| Component            | Technology                   |
+| -------------------- | ---------------------------- |
+| Programming Language | Python 3.12                  |
+| ML Model             | Random Forest Classifier     |
+| Data Processing      | Pandas, Scikit-learn         |
+| Explainability       | SHAP                         |
+| Fairness             | Fairlearn                    |
+| API                  | FastAPI                      |
+| API Server           | Uvicorn                      |
+| Containerization     | Docker                       |
+| Container Registry   | Google Artifact Registry     |
+| Cloud Platform       | Google Cloud Platform        |
+| Kubernetes           | Google Kubernetes Engine     |
+| Autoscaling          | Kubernetes HPA               |
+| CI/CD                | GitHub Actions               |
+| Authentication       | Workload Identity Federation |
+| Logging              | Google Cloud Logging         |
+| Load Testing         | wrk                          |
+| Drift Detection      | SciPy + Evidently            |
+| Version Control      | Git + GitHub                 |
+
+6. Machine Learning Approach
+6.1 Data Preprocessing
+
+The preprocessing pipeline performs the following operations:
+
+Remove the sno identifier column.
+Separate the target variable from input features.
+Handle missing numerical values using median imputation.
+Handle missing categorical values using most-frequent imputation.
+Apply one-hot encoding to categorical variables.
+Perform a stratified train-test split.
+Train the classification model.
+
+The train-test split uses:
+
+Test size = 20%
+Random state = 42
+Stratification = Enabled
+
+This ensures reproducibility and maintains the target class distribution between training and testing datasets.
+
+7. Machine Learning Model
+
+A Random Forest Classifier was used.
+
+Configuration:
 
 n_estimators = 300
 random_state = 42
 class_weight = balanced
-Model Result
 
-Test accuracy:
+The model achieved:
 
-0.8033
+Test Accuracy = 0.8033
 
-The trained preprocessing pipeline and model are stored in:
+Therefore, the model achieved approximately:
+
+80.33% test accuracy
+
+The trained model and preprocessing pipeline were saved into:
 
 app/model/model.joblib
-4. Task 2 — Model Explainability using SHAP
+8. Task 2 — Explainability Using SHAP
 
-SHAP (SHapley Additive exPlanations) is used to understand the contribution of features to model predictions.
+Model explainability was implemented using SHAP (SHapley Additive exPlanations).
 
-Implementation:
+The purpose of SHAP is to understand how individual features contribute to the model's predictions.
+
+The script:
 
 explainability.py
 
-Generated outputs:
+performs:
+
+Data preprocessing
+Model training
+SHAP TreeExplainer analysis
+Feature importance calculation
+SHAP summary plot generation
+
+Output files:
 
 shap_feature_importance.csv
 shap_summary.png
-Least Impactful Features
 
-Based on mean absolute SHAP values:
+The least-impact features based on mean absolute SHAP values were:
 
 Feature	Mean Absolute SHAP
 fbs	0.001902
 trestbps	0.013237
 restecg	0.015150
-Plain-English Interpretation
 
-Among the analyzed features, fbs had the smallest average contribution to the model predictions.
+Among these analysed features, fbs had the lowest mean absolute SHAP impact.
 
-trestbps and restecg also had relatively low average SHAP impact compared with the more influential features.
+9. Task 3 — Fairness Analysis
 
-5. Task 3 — Fairness Analysis using Fairlearn
+Fairness analysis was performed using Fairlearn.
 
-Fairness analysis is implemented in:
-
-fairness.py
-
-The sensitive attribute used for the fairness analysis is:
+The sensitive attribute selected for the analysis was:
 
 age
 
-Age was divided into three groups:
+The age values were grouped into:
 
 <50
-50-59
+50–59
 60+
-Group Sizes
-Age Group	Samples
+
+Group sizes:
+
+Age Group	Number of Records
 <50	88
-50-59	125
+50–59	125
 60+	90
-Overall Accuracy
+
+Overall model accuracy:
+
 0.8033
-Group Metrics
+
+Group metrics:
+
 Age Group	Accuracy	Selection Rate
-<50	0.937500	0.812500
-50-59	0.740741	0.629630
+50–59	0.740741	0.629630
 60+	0.777778	0.500000
-Fairness Metrics
+<50	0.937500	0.812500
+
+Fairness metrics:
+
 Demographic Parity Difference = 0.3125
-Equalized Odds Difference      = 0.1429
 
-These results indicate measurable differences in model behavior across the defined age groups.
+Equalized Odds Difference ≈ 0.1429
 
-Generated files:
+These values indicate measurable differences between the age groups.
 
-fairlearn_age_group_metrics.csv
-fairness_summary.csv
-6. Task 4 — FastAPI Application
+The fairness analysis demonstrates that model performance and prediction selection rates can differ across sensitive demographic groups.
 
-The prediction API is implemented using FastAPI.
+10. FastAPI Application
 
-Main application:
+The trained model was converted into a REST API using FastAPI.
+
+The API code is located at:
 
 app/main.py
-Health Endpoint
+
+The API loads:
+
+app/model/model.joblib
+
+The API provides two main endpoints.
+
+10.1 Health Endpoint
+
+Endpoint:
+
 GET /health
 
-Example response:
+Example:
+
+curl http://<EXTERNAL_IP>/health
+
+Expected response:
 
 {
   "status": "healthy",
   "model_loaded": true
 }
-Prediction Endpoint
+
+This endpoint confirms that:
+
+The API is running.
+The trained model has been successfully loaded.
+10.2 Prediction Endpoint
+
+Endpoint:
+
 POST /predict
 
-The endpoint accepts:
+The endpoint accepts patient information including:
 
 age
 gender
@@ -219,61 +323,80 @@ oldpeak
 slope
 ca
 thal
-Example Request
-{
-  "age": 63,
-  "gender": "male",
-  "cp": 3,
-  "trestbps": 145,
-  "chol": 233,
-  "fbs": 1,
-  "restecg": 0,
-  "thalach": 150,
-  "exang": 0,
-  "oldpeak": 2.3,
-  "slope": 0,
-  "ca": 0,
-  "thal": 1
-}
-Example Response
+
+Example request:
+
+curl -X POST http://<EXTERNAL_IP>/predict \
+-H "Content-Type: application/json" \
+-d '{"age":54.0,"gender":"female","cp":2,"trestbps":124.0,"chol":199.0,"fbs":0,"restecg":0,"thalach":167.0,"exang":0,"oldpeak":2.4,"slope":1,"ca":0,"thal":3}'
+
+Example response:
+
 {
   "prediction": "yes",
   "heart_disease_probability": 0.586667,
   "timestamp": "2026-09-06T09:15:36.152974+00:00"
 }
 
-The application logs prediction requests containing:
+The API returns:
 
-timestamp
+Predicted class
+Heart disease probability
+UTC timestamp
+11. API Logging
+
+The FastAPI application uses INFO-level application logging.
+
+Prediction requests are logged with information including:
+
+Input data
+Prediction
+Probability
+Timestamp
+
+Example log information:
+
+prediction_request
 input
 prediction
 probability
-7. Dockerization
+timestamp
 
-The FastAPI application is containerized using Docker.
+These logs are collected in Google Cloud Logging after deployment to GKE.
 
-Docker configuration:
+12. Docker Containerization
 
-Dockerfile
+The application was containerized using Docker.
 
-The container:
+The Dockerfile uses:
 
-Uses Python 3.12
-Installs dependencies from requirements.txt
-Copies the application
-Exposes port 8000
-Runs FastAPI using Uvicorn
-Build Locally
-docker build -t heart-disease-api:1.0 .
-Run Locally
-docker run -p 8000:8000 heart-disease-api:1.0
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY app ./app
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
-Health check:
+Docker image:
+
+heart-disease-api:1.0
+
+The image was tested locally before cloud deployment.
+
+Local health test:
 
 curl http://localhost:8000/health
-8. Google Artifact Registry
 
-The Docker image is stored in Google Artifact Registry.
+The container successfully returned:
+
+{
+  "status": "healthy",
+  "model_loaded": true
+}
+13. Google Artifact Registry
+
+The Docker image was pushed to Google Artifact Registry.
 
 Configuration:
 
@@ -289,11 +412,15 @@ iris-repo
 Image:
 heart-disease-api
 
-CI/CD images are tagged using the GitHub commit SHA.
+Artifact Registry image:
 
-9. Google Kubernetes Engine
+us-central1-docker.pkg.dev/project-56d2d662-7634-434f-a2a/iris-repo/heart-disease-api
 
-The application is deployed to Google Kubernetes Engine.
+The image was successfully built and pushed to Artifact Registry.
+
+14. Google Kubernetes Engine
+
+The application was deployed to Google Kubernetes Engine.
 
 Cluster:
 
@@ -303,161 +430,184 @@ Region:
 
 us-central1
 
-Kubernetes configuration:
+Cluster type:
 
-k8s/
-Deployment
+GKE Autopilot
+
+The Kubernetes configuration contains:
+
 k8s/deployment.yaml
+k8s/service.yaml
+k8s/hpa.yaml
+15. Kubernetes Deployment
 
-The deployment contains:
+The application is deployed using a Kubernetes Deployment.
 
-FastAPI container
-CPU and memory requests/limits
+Deployment name:
+
+heart-disease-api
+
+The container exposes port:
+
+8000
+
+The deployment includes:
+
+CPU and memory requests
+CPU and memory limits
 Startup probe
 Readiness probe
 Liveness probe
 
-The API container listens on:
-
-8000
-
-All health probes use:
+The health endpoint is used for Kubernetes health checks:
 
 /health
-10. Kubernetes Service
 
-The API is exposed using a Kubernetes LoadBalancer.
+This allows Kubernetes to determine whether the application is ready and healthy.
 
-Configuration:
+16. Kubernetes LoadBalancer Service
 
-k8s/service.yaml
+A Kubernetes LoadBalancer Service was configured.
 
-The external endpoint used during testing was:
+Service:
 
-http://34.172.95.252
+heart-disease-api
 
-Health check:
+The service exposes:
+
+Port 80
+
+and forwards traffic to:
+
+Container Port 8000
+
+The service received an external IP:
+
+34.172.95.252
+
+The deployed API was successfully accessed through this external IP.
+
+Example:
 
 curl http://34.172.95.252/health
 
-Result:
+Response:
 
 {
   "status": "healthy",
   "model_loaded": true
 }
-11. Horizontal Pod Autoscaling
+17. Horizontal Pod Autoscaler
 
-HPA configuration:
-
-k8s/hpa.yaml
+A Kubernetes Horizontal Pod Autoscaler was configured.
 
 Configuration:
 
-Minimum replicas: 1
-Maximum replicas: 3
-CPU target: 60%
-Observed Scaling
+Minimum replicas = 1
+Maximum replicas = 3
+CPU target = 60%
 
-During the preliminary load test:
+The HPA monitors CPU utilization.
 
-CPU: 125% / 60%
-Replicas: 2
+Configuration:
 
-During the main high-concurrency test:
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: heart-disease-api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: heart-disease-api
+  minReplicas: 1
+  maxReplicas: 3
 
-CPU: 188% / 60%
-Replicas: 2
+During load testing, CPU utilization increased and the HPA scaled the application from:
 
-This demonstrates that the Kubernetes HPA reacted to increased CPU utilization and scaled the application.
+1 replica → 2 replicas
 
-12. GitHub Actions CI/CD
+This demonstrated Kubernetes autoscaling behaviour.
 
-CI/CD workflow:
+18. GitHub Actions CI/CD
+
+CI/CD was implemented using GitHub Actions.
+
+Workflow file:
 
 .github/workflows/deploy.yml
 
-The workflow runs whenever changes are pushed to:
+The workflow is triggered by:
 
-main
-CI/CD Pipeline
-GitHub Repository
-       |
-       v
-GitHub Actions
-       |
-       v
-Workload Identity Federation
-       |
-       v
-Google Cloud Authentication
-       |
-       v
-Docker Build
-       |
-       v
-Artifact Registry
-       |
-       v
-GKE Credentials
-       |
-       v
-Kubernetes Deployment Update
-       |
-       v
-Rollout Verification
+push to main branch
 
-Workload Identity Federation is used instead of storing a long-lived Google Cloud service-account key in GitHub.
+The workflow performs the following operations:
 
-Successful Workflow
+Checkout source code.
+Authenticate to Google Cloud.
+Use Workload Identity Federation.
+Configure Docker authentication.
+Build the Docker image.
+Push the Docker image to Artifact Registry.
+Obtain GKE credentials.
+Update the Kubernetes Deployment.
+Wait for rollout completion.
+Verify deployment, pods and HPA.
 
-Workflow:
+The GitHub Actions deployment workflow completed successfully.
 
-Build and Deploy Heart Disease API
+19. Workload Identity Federation
 
-Successful commit:
+GitHub Actions authentication was configured using Workload Identity Federation.
 
-4945b77
+The configuration includes:
 
-Result:
+Workload Identity Pool:
+github-actions-pool
 
-Success
+Provider:
 
-Duration:
+github-actions
 
-5 minutes 6 seconds
+GitHub issuer:
 
-The workflow successfully:
+https://token.actions.githubusercontent.com/
 
-Authenticated to Google Cloud.
-Built the Docker image.
-Pushed the image to Artifact Registry.
-Obtained GKE credentials.
-Updated the Kubernetes deployment.
-Waited for rollout completion.
-Verified the deployment, pods and HPA.
-13. Task 5 — 100 API Predictions and Cloud Logging
+Repository restriction:
 
-A 100-row prediction dataset was generated:
+22f3002188/22f3002188_IITMBS_MLOPS_OPPE2_MAY_2026
+
+The repository restriction prevents unrelated GitHub repositories from using the configured identity provider.
+
+This avoids storing a long-lived Google Cloud service account key inside GitHub Actions.
+
+20. Task 5 — 100 API Predictions
+
+A separate script was created:
+
+task5_predictions.py
+
+The script sends 100 records from:
 
 prediction_data_100.csv
 
-The dataset contains exactly:
+to:
 
-100 prediction rows
+/predict
 
-All 100 rows were sent to the deployed GKE API.
+The output is saved as:
 
-API Results
+task5_api_predictions.csv
+
+Results:
+
 Total requests: 100
 Successful: 100
 Failed: 0
 
-The prediction results were saved to:
+Therefore, all 100 API prediction requests were successfully processed.
 
-task5_api_predictions.csv
-
-The output contains:
+The output CSV contains:
 
 row_id
 request_timestamp
@@ -466,135 +616,95 @@ prediction
 heart_disease_probability
 api_timestamp
 status
+21. Google Cloud Logging
 
-The file contains:
+The prediction requests were verified using Google Cloud Logging.
 
-101 lines
+A Kubernetes container log query was used to search for prediction request entries.
 
-which means:
-
-1 header + 100 prediction records
-Cloud Logging
-
-The FastAPI application prediction logs were verified through Google Cloud Logging.
-
-The logs contain:
+The logs contained information such as:
 
 prediction_request
-timestamp
 input
 prediction
 probability
+timestamp
 
-The Cloud Logging query returned:
+The final verification returned:
 
-100
+100 prediction_request log entries
 
-prediction log entries corresponding to the 100 API requests.
+This demonstrates application observability in the deployed GCP environment.
 
-End-to-End Verification
-100 input rows
-       |
-       v
-100 API requests
-       |
-       v
-100 successful predictions
-       |
-       v
-100 prediction records
-       |
-       v
-100 Cloud Logging entries
-14. Task 6 — Load Testing with wrk
+22. Task 6 — Load Testing Using wrk
 
-The deployed API was load tested using:
+Load testing was performed using:
 
-wrk 4.1.0
+wrk
 
-A Lua script was used to generate POST requests:
+The request configuration was stored in:
 
 load_test.lua
-High-Concurrency Test
 
-The required test used:
+The test used:
 
-Threads: 4
-Connections: 2001
-Duration: 30 seconds
-Timeout: 10 seconds
+Threads = 4
+Connections = 2001
+Duration = 30 seconds
+Timeout = 10 seconds
 
 Command:
 
-wrk -t4 -c2001 -d30s --latency --timeout 10s -s load_test.lua http://34.172.95.252/predict
-Results
+wrk -t4 -c2001 -d30s --latency --timeout 10s \
+-s load_test.lua \
+http://34.172.95.252/predict
 
-Total completed requests:
+Observed results:
 
-45 requests in 30.05s
+Duration ≈ 30.05 seconds
+Requests completed = 45
+Throughput ≈ 1.50 requests/sec
+Average latency ≈ 9.29 seconds
+Maximum latency ≈ 9.98 seconds
 
-Throughput:
+Socket errors included:
 
-1.50 requests/sec
+Connect errors = 0
+Read errors = 225
+Write errors = 13631
+Timeout errors = 41
 
-Average latency:
+The test intentionally generated a very high level of concurrent traffic.
 
-9.29 seconds
+The important observation was that the service remained reachable, but the application became heavily saturated.
 
-Maximum latency:
+23. HPA Response During Load Testing
 
-9.98 seconds
+Before the main load test, the application normally ran with:
 
-Latency distribution:
+1 replica
 
-50% = 9.98s
-75% = 9.98s
-90% = 9.98s
-99% = 9.98s
+During the high-concurrency load test:
 
-Socket errors:
+CPU utilization increased significantly
 
-connect = 0
-read    = 225
-write   = 13631
-timeout = 41
-Load-Test Analysis
+The HPA reacted by scaling:
 
-The API remained reachable under 2,001 concurrent connections because there were zero connection errors.
+1 replica → 2 replicas
 
-However, the service became heavily saturated.
+This demonstrated that the Kubernetes Horizontal Pod Autoscaler was responding to increased CPU utilization.
 
-Average latency increased to 9.29 seconds and most completed requests approached the 10-second timeout.
+After the workload reduced, the deployment was able to settle back toward its normal replica count.
 
-The low throughput of 1.50 requests/sec together with read, write and timeout errors demonstrates that the API could not efficiently handle this extreme concurrency level.
+24. Task 7 — Input Drift Detection
 
-The Kubernetes HPA reacted to increased CPU utilization and scaled the deployment from one replica to two replicas.
-
-Therefore, the test demonstrates both:
-
-performance degradation under extreme concurrency
-Kubernetes horizontal autoscaling behavior
-15. Task 7 — Input Drift Detection
-
-Input drift detection is implemented in:
+Input drift detection was implemented using:
 
 drift_detection.py
 
-The script compares the training/reference distribution against the generated 100-row prediction dataset.
+The script compares the training data distribution with the generated prediction input data.
 
-Reference data:
-
-data.csv
-
-Current/prediction data:
-
-prediction_data_100.csv
-
-Exactly 100 prediction rows are generated.
-
-Statistical Test
-
-The Kolmogorov-Smirnov two-sample test is applied to:
+The numerical features analysed were:
 
 age
 trestbps
@@ -602,260 +712,381 @@ chol
 thalach
 oldpeak
 
-Drift is considered detected when:
+The statistical test used was:
+
+Kolmogorov-Smirnov two-sample test
+
+The significance threshold was:
+
+p < 0.05
+
+A feature was considered to show statistically significant drift when:
 
 p-value < 0.05
-Results
-Feature	KS Statistic	p-value	Drift Detected
-age	0.197294	0.004758	Yes
-trestbps	0.352609	<0.000001	Yes
-chol	0.537152	<0.000001	Yes
-thalach	0.288725	0.000005	Yes
-oldpeak	0.505281	<0.000001	Yes
+25. Drift Detection Results
 
-The largest observed distribution differences were for:
+The observed results were:
 
-chol
-oldpeak
-Evidently
+Feature	KS Statistic	p-value	Drift
+age	0.197294	0.004758	True
+trestbps	0.352609	0.0	True
+chol	0.537152	0.0	True
+thalach	0.288725	0.000005	True
+oldpeak	0.505281	0.0	True
 
-The project also generates an Evidently DataDriftPreset report.
+All five analysed numerical features showed statistically significant drift according to the selected threshold.
 
-Generated files:
+The generated data was sampled using a different distribution-generation method, so the observed drift is expected from the way the test input data was constructed.
 
-prediction_data_100.csv
-drift_summary.csv
+26. Evidently Drift Report
+
+In addition to the statistical test, Evidently was used to generate a visual drift report.
+
+Output:
+
 drift_report.html
 
-The HTML report provides an additional visual/data-drift analysis of the reference and current datasets.
+A summary CSV was also generated:
 
-16. Requirements
-
-Python dependencies are listed in:
-
-requirements.txt
-
-Major packages include:
-
-numpy
-pandas
-scikit-learn
-matplotlib
-seaborn
-mlflow
-shap
-lime
-evidently
-fastapi
-uvicorn
-joblib
-fairlearn
-17. Running the Application Locally
-
-Activate the virtual environment:
-
-source venv/bin/activate
-
-Train/save the model:
-
-python app/train_model.py
-
-Start the API:
-
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-
-Health check:
-
-curl http://localhost:8000/health
-
-Prediction endpoint:
-
-POST http://localhost:8000/predict
-18. Running Explainability
-python explainability.py
-
-Outputs:
-
-shap_feature_importance.csv
-shap_summary.png
-19. Running Fairness Analysis
-python fairness.py
-
-Outputs:
-
-fairlearn_age_group_metrics.csv
-fairness_summary.csv
-20. Running Drift Detection
-python drift_detection.py
-
-Outputs:
-
-prediction_data_100.csv
 drift_summary.csv
-drift_report.html
-21. Kubernetes Commands
 
-Apply the deployment:
+The Evidently report provides an additional way to inspect differences between reference training data and current prediction input data.
 
-kubectl apply -f k8s/deployment.yaml
+27. Important Output Files
 
-Apply the service:
+The major output files generated by the project are:
 
-kubectl apply -f k8s/service.yaml
+File	Purpose
+shap_feature_importance.csv	SHAP feature importance
+shap_summary.png	SHAP summary visualization
+model.joblib	Trained deployable model
+prediction_data_100.csv	100 API input records
+task5_api_predictions.csv	100 API prediction results
+drift_summary.csv	Statistical drift results
+drift_report.html	Evidently drift report
+28. Errors Encountered and Troubleshooting
 
-Apply the HPA:
+Several issues were encountered during implementation.
 
-kubectl apply -f k8s/hpa.yaml
+28.1 Cloud Logging Permission Error
 
-Check deployment:
+Initially, querying Google Cloud Logging resulted in a permissions issue.
 
-kubectl get deployment heart-disease-api
+The Compute Engine service account did not have the required Logs Viewer permission.
 
-Check pods:
+The issue was identified as an IAM permission problem.
 
+After the appropriate Logs Viewer permission was added, Cloud Logging queries worked successfully.
+
+28.2 IAM Permission Error
+
+While attempting to grant read-only access to the IITM evaluation account, the following type of error was encountered:
+
+does not have permission to access projects instance
+
+The reason was that the command was executed while authenticated as:
+
+601911737889-compute@developer.gserviceaccount.com
+
+The Compute Engine service account did not have permission to modify the project's IAM policy.
+
+Therefore, IAM modifications must be performed using an account with appropriate project-level IAM administration permissions.
+
+This was identified as an IAM authorization issue rather than an application or deployment problem.
+
+28.3 High-Concurrency Load Test Saturation
+
+During the 2,001-connection load test, the service became heavily saturated.
+
+This caused:
+
+High latency
+Read errors
+Write errors
+Request timeouts
+Low throughput
+
+However, there were:
+
+0 connection errors
+
+and the HPA reacted by increasing the number of replicas.
+
+This demonstrated the behaviour of the application under stress and the response of Kubernetes autoscaling.
+
+29. End-to-End Architecture
+
+The complete architecture can be represented as:
+
+                    ┌─────────────────┐
+                    │    data.csv     │
+                    └────────┬────────┘
+                             │
+                             ▼
+                  ┌─────────────────────┐
+                  │ Data Preprocessing  │
+                  └──────────┬──────────┘
+                             │
+                             ▼
+                  ┌─────────────────────┐
+                  │ Random Forest Model │
+                  └──────────┬──────────┘
+                             │
+                 ┌───────────┴───────────┐
+                 │                       │
+                 ▼                       ▼
+          ┌──────────────┐        ┌──────────────┐
+          │     SHAP     │        │   Fairlearn  │
+          │ Explainability│       │   Fairness   │
+          └──────────────┘        └──────────────┘
+                             │
+                             ▼
+                  ┌─────────────────────┐
+                  │     FastAPI         │
+                  │   /health /predict  │
+                  └──────────┬──────────┘
+                             │
+                             ▼
+                       ┌───────────┐
+                       │  Docker   │
+                       └─────┬─────┘
+                             │
+                             ▼
+                  ┌─────────────────────┐
+                  │ Artifact Registry   │
+                  └──────────┬──────────┘
+                             │
+                             ▼
+                  ┌─────────────────────┐
+                  │        GKE          │
+                  │  heart-disease-api  │
+                  └──────────┬──────────┘
+                             │
+                     ┌───────┴────────┐
+                     │                │
+                     ▼                ▼
+              LoadBalancer           HPA
+                     │                │
+                     ▼                ▼
+              Public API        1 → 2 replicas
+                     │
+          ┌──────────┼───────────┐
+          │          │           │
+          ▼          ▼           ▼
+      100 API     Cloud       Load Test
+     Predictions  Logging       wrk
+          │
+          ▼
+     Drift Detection
+          │
+          ▼
+   Evidently Report
+
+30. End-to-End Workflow
+
+The complete sequence performed in the project was:
+
+1. Create/access GCP Compute Engine VM
+        ↓
+2. SSH into VM
+        ↓
+3. Configure Python environment
+        ↓
+4. Install required dependencies
+        ↓
+5. Configure Git and GitHub repository
+        ↓
+6. Load and analyse dataset
+        ↓
+7. Preprocess data
+        ↓
+8. Train Random Forest model
+        ↓
+9. Evaluate model
+        ↓
+10. Perform SHAP explainability
+        ↓
+11. Perform Fairlearn fairness analysis
+        ↓
+12. Create FastAPI application
+        ↓
+13. Save trained model as model.joblib
+        ↓
+14. Build Docker image
+        ↓
+15. Test Docker container locally
+        ↓
+16. Push image to Artifact Registry
+        ↓
+17. Create GKE Autopilot cluster
+        ↓
+18. Deploy application to GKE
+        ↓
+19. Configure LoadBalancer Service
+        ↓
+20. Configure HPA
+        ↓
+21. Configure GitHub Actions CI/CD
+        ↓
+22. Configure Workload Identity Federation
+        ↓
+23. Deploy through GitHub Actions
+        ↓
+24. Test /health endpoint
+        ↓
+25. Test /predict endpoint
+        ↓
+26. Send 100 prediction requests
+        ↓
+27. Verify Cloud Logging
+        ↓
+28. Perform wrk load testing
+        ↓
+29. Observe HPA scaling
+        ↓
+30. Perform input drift detection
+        ↓
+31. Generate drift_summary.csv
+        ↓
+32. Generate Evidently drift_report.html
+
+31. Demonstration Commands
+
+Useful commands for demonstrating the deployed system:
+
+Check GCP authentication
+gcloud auth list
+Check GKE cluster
+gcloud container clusters list
+Check Kubernetes pods
 kubectl get pods
+Check deployment
+kubectl get deployment
+Check service
+kubectl get service
+Check HPA
+kubectl get hpa
+Health check
+curl http://34.172.95.252/health
+Prediction
+curl -X POST http://34.172.95.252/predict \
+-H "Content-Type: application/json" \
+-d '{"age":54.0,"gender":"female","cp":2,"trestbps":124.0,"chol":199.0,"fbs":0,"restecg":0,"thalach":167.0,"exang":0,"oldpeak":2.4,"slope":1,"ca":0,"thal":3}'
+Run 100 API predictions
+python task5_predictions.py
+Run drift detection
+python drift_detection.py
+32. Results Summary
+Component	Result
+Dataset	303 × 15
+Model	Random Forest
+Test Accuracy	80.33%
+SHAP	Successfully implemented
+Fairness	Successfully implemented
+Demographic Parity Difference	0.3125
+Equalized Odds Difference	≈ 0.1429
+FastAPI	Successfully deployed
+Docker	Successfully built and tested
+Artifact Registry	Successfully pushed
+GKE	Successfully deployed
+LoadBalancer	Successfully exposed
+HPA	Successfully configured
+CI/CD	Successfully executed
+API Predictions	100/100 successful
+Cloud Logging	100 prediction entries verified
+Load Test	2,001 concurrent connections
+Load Test Throughput	≈ 1.50 req/sec
+Load Test Average Latency	≈ 9.29 sec
+HPA Load Response	1 → 2 replicas
+Drift Detection	Successfully implemented
+Evidently Report	Successfully generated
+33. MLOps Practices Demonstrated
 
-Check service:
+This project demonstrates the following MLOps practices:
 
-kubectl get service heart-disease-api
+Reproducibility
 
-Check HPA:
+Fixed random states were used during data splitting and model training.
 
-kubectl get hpa heart-disease-api
+Explainability
 
-Check resource usage:
+SHAP was used to understand feature contributions.
 
-kubectl top pods
-22. GitHub Actions
+Fairness
 
-The CI/CD workflow is automatically triggered by a push to the main branch.
+Fairlearn was used to evaluate differences across age groups.
 
-The workflow file is:
+Packaging
 
-.github/workflows/deploy.yml
+The application and model were packaged into a Docker container.
 
-The workflow uses:
+Registry
 
-GitHub OIDC
-Workload Identity Federation
-Google Cloud
-Artifact Registry
-Google Kubernetes Engine
-kubectl
+The container image was stored in Google Artifact Registry.
 
-No long-lived Google Cloud service-account key is stored in the GitHub repository.
+Deployment
 
-23. Project Completion Summary
-Task	Status
-Private GitHub repository	Complete
-SHAP explainability	Complete
-Fairlearn fairness analysis	Complete
-Dockerized FastAPI	Complete
-Artifact Registry	Complete
-GKE deployment	Complete
-HPA with maximum 3 pods	Complete
-GitHub Actions CI/CD	Complete
-100 API predictions	Complete
-Input/output/timestamp logging	Complete
-Cloud Logging verification	Complete
-2,001 concurrent connection test	Complete
-Load-test analysis	Complete
-Input drift detection	Complete
-KS statistical drift analysis	Complete
-Evidently drift report	Complete
-24. Final Architecture
-                         GitHub Repository
-                                |
-                                v
-                         GitHub Actions
-                                |
-                                v
-                    Workload Identity Federation
-                                |
-                                v
-                         Google Cloud
-                                |
-                 +--------------+--------------+
-                 |                             |
-                 v                             v
-          Artifact Registry                  GKE
-                 |                             |
-           Docker Image              Kubernetes Deployment
-                                               |
-                                    +----------+----------+
-                                    |                     |
-                                    v                     v
-                                  Pod 1              Pod 2 / Pod 3
-                                    |                     |
-                                    +----------+----------+
-                                               |
-                                               v
-                                          LoadBalancer
-                                               |
-                                               v
-                                        FastAPI API
-                                               |
-                              +----------------+----------------+
-                              |                                 |
-                              v                                 v
-                         Prediction                         Cloud Logging
-                              |
-                              v
-                       Prediction Results
+The application was deployed to GKE.
 
-Training Data
-     |
-     +--> Model Training
-     |
-     +--> SHAP Explainability
-     |
-     +--> Fairness Analysis
-     |
-     +--> Drift Reference Distribution
-                       |
-                       v
-              100-Row Prediction Data
-                       |
-                       v
-                Drift Detection
-                 /            \
-                v              v
-         KS Statistical     Evidently
-             Test             Report
-25. Final Conclusion
+Scalability
 
-This project demonstrates an end-to-end MLOps workflow for a heart disease classification model.
+Horizontal Pod Autoscaling was configured.
 
-The implementation covers:
+CI/CD
 
-model training
-preprocessing
-SHAP explainability
-fairness evaluation with Fairlearn
-Docker containerization
-Artifact Registry
-Google Kubernetes Engine deployment
-Kubernetes Service
-Horizontal Pod Autoscaling
-GitHub Actions CI/CD
-Workload Identity Federation
-API prediction logging
-Google Cloud Logging
-100 deployed API predictions
-high-concurrency load testing
-performance analysis
-input drift detection
-Evidently monitoring
+GitHub Actions automated the build and deployment process.
 
-The deployed API was successfully accessed through GKE.
+Authentication
 
-All 100 prediction requests completed successfully and were verified in Cloud Logging.
+Workload Identity Federation was used instead of storing long-lived service account keys in GitHub.
 
-The HPA successfully responded to increased CPU utilization during load testing.
+Monitoring
 
-The 2,001-concurrent-connection benchmark demonstrated significant latency and error behavior under extreme load, providing evidence for performance analysis.
+Application prediction logs were verified through Cloud Logging.
 
-Input drift was evaluated using both the Kolmogorov-Smirnov statistical test and an Evidently data-drift report.
+Performance Testing
 
-Overall, the project demonstrates the complete lifecycle from model development to deployment, monitoring, testing, fairness, explainability, CI/CD and drift detection.
-EOF
+The API was tested using wrk with 2,001 concurrent connections.
+
+Data Monitoring
+
+Input drift was evaluated using statistical testing and Evidently.
+
+34. Conclusion
+
+This project demonstrates a complete end-to-end MLOps lifecycle for a heart disease classification application.
+
+The workflow started with the dataset and machine learning model and progressed through:
+
+Data
+→ Model
+→ Explainability
+→ Fairness
+→ FastAPI
+→ Docker
+→ Artifact Registry
+→ GKE
+→ HPA
+→ CI/CD
+→ Cloud Logging
+→ Load Testing
+→ Drift Detection
+
+The final system successfully provides a cloud-hosted machine learning prediction API.
+
+The project also demonstrates important production-oriented MLOps concepts including automated deployment, containerization, Kubernetes orchestration, autoscaling, logging, explainability, fairness evaluation, performance testing and input drift detection.
+
+35. Project Status
+Task 1 — Private GitHub Repository              ✅ Complete
+Task 2 — SHAP Explainability                   ✅ Complete
+Task 3 — Fairness Analysis                     ✅ Complete
+Task 4 — FastAPI + Docker + GKE + CI/CD        ✅ Complete
+Task 5 — 100 API Predictions + Logging         ✅ Complete
+Task 6 — wrk Load Testing + HPA                ✅ Complete
+Task 7 — Input Drift Detection                ✅ Complete
+Documentation                                  ✅ Complete
+36. Final Statement
+
+The project successfully demonstrates an end-to-end MLOps implementation for a machine learning classification application using Google Cloud Platform.
+
+The system integrates machine learning, explainability, fairness, API serving, containerization, Kubernetes deployment, autoscaling, CI/CD, logging, performance testing and data drift monitoring into a single workflow.
