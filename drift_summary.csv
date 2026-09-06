@@ -1,0 +1,6 @@
+feature,test,statistic,p_value,drift_detected
+age,Kolmogorov-Smirnov,0.197294,0.004758,True
+trestbps,Kolmogorov-Smirnov,0.352609,0.0,True
+chol,Kolmogorov-Smirnov,0.537152,0.0,True
+thalach,Kolmogorov-Smirnov,0.288725,5e-06,True
+oldpeak,Kolmogorov-Smirnov,0.505281,0.0,True

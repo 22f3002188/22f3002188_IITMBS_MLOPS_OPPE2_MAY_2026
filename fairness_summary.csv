@@ -1,0 +1,4 @@
+metric,value
+overall_accuracy,0.8032786885245902
+demographic_parity_difference,0.3125
+equalized_odds_difference,0.1428571428571429
